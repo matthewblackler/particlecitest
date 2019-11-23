@@ -1,0 +1,41 @@
+Demo CI Pipeline for Particle
+=============================
+
+This can be used as a template to set up Continuous Integration / Deployment for Particle projects.
+
+We use the CIrcleCI (https://www.circleci.com/) platform.
+
+The sample project will continuously blink a led. See: src/myproject.cpp . This also makes use of a library, in order to calculate the blink interval. See: src/lib/mylibrary/src/MyLibrary.cpp . The library provides a sample addition function, and is supported by a unit test suite. See: lib/mylibrary/tests/TestAddition.cpp .
+
+I have developed the library and test suite using UnitTest++, exactly based on this guideline by 'Zachary' (Particle CTO):
+https://community.particle.io/t/how-to-unit-test/2045/4
+This architecture is demonstrated in Particle's Communication Library:
+https://github.com/particle-iot/core-communication-lib
+(See the /tests/ folder of that library).
+The main idea is that unit tests must be built and executed on the development machine, before the project will be cross-compiled for the target platform.
+
+Tests can be executed from the command line using: `make test`. The same procedure will be executed on the CI platform, every time a git commit ispushed to Github.
+
+The next step in the pipeline is compiling for the target platform. For this, we're using the Particle CLI. The CI job will authenticate against the Particle API using a token. You will create this token and store it securely in CircleCI. The built produced from every executed CI job will be stored and archived on the CI platform as a build artifact. 
+
+Finally, the sample pipeline includes a build step that actually deploys the build on a device. You can execute this in a loop to deploy to any number of devices.
+
+It is possible to use these building blocks to implement a modern git-based workflow. A simple example of such a workflow is already implemented in this demo: Commits made to a 'develop' branch are unit-tested and built for the target platform, and the binaries are stored as artifacts. Commits made to master go through the same procedure, but are also instantly deployed to a Particle device.
+
+The pipeline is defined in the configuration file: .circleci/config.yml . Any changes to the development workflow can be achieved by editing this file. 
+
+HOW TO SET UP THE DEMO:
+
+- Push this demo project to Github. This can be a private, or public repository. Select a name for your repository. We will assume that you named your repo `myproject`.
+- Go to the CircleCI website, and sign-in using Github. This will create your CircleCI account, and automatically provide CircleCI access to your Github repositories.
+- At CircleCI, select 'Add Project'.
+- Among the list of your Github repos, select this project (myproject) and click 'Set Up Project'.
+- On the next screen, ignore all available options. This project is already set up as a CI pipeline, because it already includes a `circleci/config.yml` file. Click 'Start Building'.
+- Obtain a login token from Particle. You can do this by using the Particle CLI on your computer: `particle token create`.
+- On the page of your new CI project, select the Gear icon to edit this pipeline's settings. Go to 'Build Settings' > 'Environment Variables'. Add a new variable, PARTICLE_TOKEN. The value of PARTICLE_TOKEN should be the token you created during the previous step. By storing the token in an environment variable, we can use it during automated builds without the need to commit the token to git (which would be insecure).
+- At this point the pipeline has been set. You can watch the build jobs running on the CircleCI web interface.
+- To kick-off a new build, you must make a commit and push it to Github. Start by editing `.circleci/config.yml`:
+- Edit TARGET_DEVICE and TARGET_PLATFORM near the top of the file, according to your needs. Also, edit TARGET_UNIT and set it to be the name of one of your devices.
+- Commit the above change to git / master, and push to Github. Watch the new build: First a build container will be set up, then the unit tests will be built and ran. If tests pass, the firmware will be built. Finally, your device will be flashed using this firmware. 
+- Then, you can make changes to the application code, and / or the unit tests, and watch your code as it is built and deployed. You can download the built firmware from the 'Artifacts' tab of any build.
+- Create a new branch and name it 'develop'. See that commits on that branch are tested and built, but they are not flashed to the device. See how this workflow rule is implemented in `circleci/config.yml`. I can provide advice for implementing additional, more complex workflows.
