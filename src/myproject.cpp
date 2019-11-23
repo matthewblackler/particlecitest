@@ -12,7 +12,7 @@ void loop() {
 
     state = !state;
 
-    int delayTime = add_two_numbers(200, 200);
+    int delayTime = add_two_numbers(200, 600);
 
     delay(delayTime);
 }
