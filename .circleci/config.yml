@@ -1,0 +1,48 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:12.13
+    environment:
+      - TARGET_DEVICE: photon
+      - TARGET_PLATFORM: 1.0.1
+      - TARGET_UNIT: CYAN
+      - PARTICLE_DISABLE_UPDATE: true
+    steps:
+    - checkout
+    - run: |
+        mkdir artifacts
+    - run:
+        name: Install Particle CLI
+        command: |
+          sudo npm install -g --silent particle-cli
+    - run:
+        name: Run unit tests
+        command: |
+          cd lib/mylibrary
+          make test
+    - run:
+        name: Particle login
+        command: |
+          particle login --token $PARTICLE_TOKEN
+    - run:
+        name: Build image
+        command: |
+          particle compile $TARGET_DEVICE --target $TARGET_PLATFORM --saveTo artifacts/firmware.bin src lib/*/src
+    - store_artifacts:
+        path: ~/project/artifacts
+        destination: artifacts
+    - run: |
+        if [ "$CIRCLE_BRANCH" = "develop" ]
+        then
+          circleci-agent step halt
+        fi
+    - run:
+        name: Flash image
+        command: |
+          particle flash --yes $TARGET_UNIT artifacts/firmware.bin
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
