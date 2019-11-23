@@ -6,7 +6,7 @@ jobs:
     environment:
       - TARGET_DEVICE: photon
       - TARGET_PLATFORM: 1.0.1
-      - TARGET_UNIT: CYAN
+      - TARGET_UNIT: circlecitester
       - PARTICLE_DISABLE_UPDATE: true
     steps:
     - checkout
